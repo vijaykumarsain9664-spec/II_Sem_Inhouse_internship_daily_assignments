@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Registry</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#101B33;
+  --ink-2:#1D2C4F;
+  --steel:#3A5A8C;
+  --paper:#F3F5F8;
+  --card:#FFFFFF;
+  --gold:#E8A33D;
+  --grade-high:#2F8F5B;
+  --grade-mid:#D98F2B;
+  --grade-low:#8A8F98;
+  --muted:#6B7280;
+  --line:#E3E7EE;
+  --radius:18px;
+
+  /* vivid branch palette */
+  --c-cse:#7C3AED;
+  --c-ece:#0D9488;
+  --c-me:#E11D48;
+  --c-ce:#2563EB;
+  --c-it:#DB2777;
+  --c-eee:#D97706;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  background:var(--paper);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(16,27,51,0.055) 1px, transparent 0);
+  background-size: 22px 22px;
+  font-family:'Inter', sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+}
+
+/* drifting ambient color blobs */
+.bg-blob{
+  position:fixed;
+  width:520px; height:520px;
+  border-radius:50%;
+  filter:blur(90px);
+  opacity:.22;
+  z-index:0;
+  pointer-events:none;
+  animation:drift 22s ease-in-out infinite;
+}
+.bg-blob.b1{ top:-180px; left:-160px; background:var(--c-cse); animation-duration:26s; }
+.bg-blob.b2{ bottom:-200px; right:-160px; background:var(--c-it); animation-duration:30s; animation-delay:-8s; }
+.bg-blob.b3{ top:40%; left:60%; background:var(--c-eee); animation-duration:24s; animation-delay:-4s; }
+
+@keyframes drift{
+  0%,100%{ transform:translate(0,0) scale(1); }
+  33%{ transform:translate(40px,-30px) scale(1.08); }
+  66%{ transform:translate(-30px,25px) scale(.95); }
+}
+
+/* ---------- NAVBAR ---------- */
+.registry-nav{
+  background:var(--ink);
+  padding:.9rem 0;
+  position:relative;
+  z-index:10;
+}
+.registry-nav::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-3px;
+  height:3px;
+  background:linear-gradient(90deg,
+    var(--c-cse), var(--c-ece), var(--c-me), var(--c-ce), var(--c-it), var(--c-eee), var(--c-cse));
+  background-size:200% 100%;
+  animation:rainbowSlide 6s linear infinite;
+}
+@keyframes rainbowSlide{
+  0%{background-position:0% 0;}
+  100%{background-position:200% 0;}
+}
+.brand-mark{
+  font-family:'Fraunces', serif;
+  font-weight:700;
+  font-size:1.35rem;
+  color:#fff;
+  letter-spacing:.2px;
+  display:flex;
+  align-items:center;
+  gap:.55rem;
+}
+.brand-mark .dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--gold);
+  box-shadow:0 0 0 3px rgba(232,163,61,.25);
+  animation:pulseDot 2s ease-in-out infinite;
+}
+@keyframes pulseDot{
+  0%,100%{ box-shadow:0 0 0 3px rgba(232,163,61,.25); transform:scale(1); }
+  50%{ box-shadow:0 0 0 7px rgba(232,163,61,.08); transform:scale(1.15); }
+}
+.brand-sub{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.68rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9FB0D6;
+  margin-left:2rem;
+}
+
+.search-wrap{
+  max-width:420px;
+}
+.search-wrap .form-control{
+  background:#16224A;
+  border:1px solid #2C3D68;
+  color:#fff;
+  font-family:'Inter',sans-serif;
+  font-size:.92rem;
+}
+.search-wrap .form-control::placeholder{color:#8393BC;}
+.search-wrap .form-control:focus{
+  background:#16224A;
+  color:#fff;
+  border-color:var(--gold);
+  box-shadow:0 0 0 .18rem rgba(232,163,61,.22);
+}
+.search-wrap .input-group-text{
+  background:#16224A;
+  border:1px solid #2C3D68;
+  border-right:none;
+  color:#9FB0D6;
+}
+
+/* ---------- FILTER BAR ---------- */
+.filter-bar{
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+  padding:1.1rem 0;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+.filter-label{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.68rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:.4rem;
+  display:block;
+}
+.branch-chip{
+  border:1.5px solid var(--line);
+  background:#fff;
+  color:var(--ink-2);
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:600;
+  font-size:.82rem;
+  padding:.36rem .9rem;
+  border-radius:999px;
+  cursor:pointer;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1), border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
+  white-space:nowrap;
+}
+.branch-chip:hover{transform:translateY(-2px) scale(1.04);}
+.branch-chip.active{
+  color:#fff;
+  transform:translateY(-1px) scale(1.05);
+  animation:chipPop .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes chipPop{
+  0%{ transform:scale(.85); }
+  60%{ transform:scale(1.1); }
+  100%{ transform:scale(1.05); }
+}
+.chip-dot{
+  width:7px;height:7px;border-radius:50%;
+  display:inline-block;
+  margin-right:.4rem;
+  background:var(--steel);
+}
+.branch-chip.active .chip-dot{background:#fff;}
+
+/* per-branch chip theming */
+.branch-chip[data-branch="all"]:hover{border-color:var(--ink);}
+.branch-chip[data-branch="all"].active{background:var(--ink); border-color:var(--ink); box-shadow:0 6px 16px rgba(16,27,51,.28);}
+
+.branch-chip[data-branch="CSE"] .chip-dot{background:var(--c-cse);}
+.branch-chip[data-branch="CSE"]:hover{border-color:var(--c-cse);}
+.branch-chip[data-branch="CSE"].active{background:var(--c-cse); border-color:var(--c-cse); box-shadow:0 6px 16px rgba(124,58,237,.35);}
+
+.branch-chip[data-branch="ECE"] .chip-dot{background:var(--c-ece);}
+.branch-chip[data-branch="ECE"]:hover{border-color:var(--c-ece);}
+.branch-chip[data-branch="ECE"].active{background:var(--c-ece); border-color:var(--c-ece); box-shadow:0 6px 16px rgba(13,148,136,.35);}
+
+.branch-chip[data-branch="ME"] .chip-dot{background:var(--c-me);}
+.branch-chip[data-branch="ME"]:hover{border-color:var(--c-me);}
+.branch-chip[data-branch="ME"].active{background:var(--c-me); border-color:var(--c-me); box-shadow:0 6px 16px rgba(225,29,72,.35);}
+
+.branch-chip[data-branch="CE"] .chip-dot{background:var(--c-ce);}
+.branch-chip[data-branch="CE"]:hover{border-color:var(--c-ce);}
+.branch-chip[data-branch="CE"].active{background:var(--c-ce); border-color:var(--c-ce); box-shadow:0 6px 16px rgba(37,99,235,.35);}
+
+.branch-chip[data-branch="IT"] .chip-dot{background:var(--c-it);}
+.branch-chip[data-branch="IT"]:hover{border-color:var(--c-it);}
+.branch-chip[data-branch="IT"].active{background:var(--c-it); border-color:var(--c-it); box-shadow:0 6px 16px rgba(219,39,119,.35);}
+
+.branch-chip[data-branch="EEE"] .chip-dot{background:var(--c-eee);}
+.branch-chip[data-branch="EEE"]:hover{border-color:var(--c-eee);}
+.branch-chip[data-branch="EEE"].active{background:var(--c-eee); border-color:var(--c-eee); box-shadow:0 6px 16px rgba(217,119,6,.35);}
+
+.cgpa-range{
+  width:100%;
+  accent-color:var(--ink);
+}
+.cgpa-readout{
+  font-family:'JetBrains Mono', monospace;
+  font-weight:700;
+  font-size:.9rem;
+  color:var(--ink);
+  background:#EFF2F7;
+  border-radius:6px;
+  padding:.1rem .5rem;
+}
+
+/* ---------- RESULT META ---------- */
+.result-meta{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.75rem;
+  color:var(--muted);
+  letter-spacing:.04em;
+}
+.result-meta b{color:var(--ink);}
+
+/* ---------- CARDS ---------- */
+.card-grid{
+  padding:2.2rem 0 4rem;
+}
+
+.id-card{
+  --bc:var(--steel);
+  background:var(--card);
+  border-radius:var(--radius);
+  border:1px solid var(--line);
+  box-shadow:0 1px 2px rgba(16,27,51,.04);
+  padding:1.9rem 1.25rem 1.35rem;
+  position:relative;
+  overflow:visible;
+  height:100%;
+  opacity:0;
+  transform:translateY(24px) scale(.94) rotate(-2deg);
+  animation:cardIn .6s cubic-bezier(.22,1,.36,1) forwards;
+  transition:box-shadow .3s ease, transform .3s ease, border-color .3s ease;
+}
+.id-card::before{ z-index:2; }
+.id-card::after{ z-index:2; }
+.id-card > *{ position:relative; z-index:1; }
+.id-card > .top-accent{
+  position:absolute;
+  top:0; left:0; right:0;
+  height:5px;
+  background:var(--bc);
+  z-index:1;
+  border-radius:var(--radius) var(--radius) 0 0;
+}
+.id-card:hover{
+  box-shadow:0 20px 38px -8px color-mix(in srgb, var(--bc) 45%, rgba(16,27,51,.2));
+  transform:translateY(-6px) scale(1.015);
+  border-color:var(--bc);
+}
+
+@keyframes cardIn{
+  0%{opacity:0; transform:translateY(24px) scale(.94) rotate(-2deg);}
+  60%{opacity:1;}
+  100%{opacity:1; transform:translateY(0) scale(1) rotate(0);}
+}
+
+/* punch hole + lanyard */
+.id-card::before{
+  content:"";
+  position:absolute;
+  top:-9px; left:50%;
+  transform:translateX(-50%);
+  width:26px; height:14px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-bottom:none;
+  border-radius:8px 8px 0 0;
+}
+.id-card::after{
+  content:"";
+  position:absolute;
+  top:-3px; left:50%;
+  transform:translateX(-50%);
+  width:10px; height:10px;
+  background:var(--paper);
+  border:1px solid #CBD3E0;
+  border-radius:50%;
+}
+
+.branch-tab{
+  position:absolute;
+  top:1.1rem; right:0;
+  transform:translateX(30%);
+  font-family:'JetBrains Mono', monospace;
+  font-size:.66rem;
+  font-weight:700;
+  letter-spacing:.08em;
+  color:#fff;
+  padding:.28rem .55rem .28rem .7rem;
+  border-radius:6px 0 0 6px;
+  background:var(--bc);
+  box-shadow:-2px 3px 8px rgba(16,27,51,.18);
+  transition:transform .3s ease;
+}
+
+/* ---------- FLIP CARD ---------- */
+.flip-scene{
+  perspective:1200px;
+  min-height:300px;
+}
+.flip-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  transition:transform .7s cubic-bezier(.4,.15,.2,1);
+  transform-style:preserve-3d;
+}
+.id-card:hover .flip-inner, .id-card.flipped .flip-inner{
+  transform:rotateY(180deg);
+}
+.id-card:hover .branch-tab, .id-card.flipped .branch-tab{ transform:translateX(30%) scale(0); }
+.flip-front, .flip-back{
+  position:absolute;
+  inset:0;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.flip-back{
+  transform:rotateY(180deg);
+  justify-content:flex-start;
+}
+.flip-hint{
+  text-align:center;
+  font-family:'JetBrains Mono', monospace;
+  font-size:.62rem;
+  letter-spacing:.06em;
+  color:var(--muted);
+  opacity:.75;
+  margin-top:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.3rem;
+}
+.flip-hint i{ animation:hintSpin 3s linear infinite; font-size:.8rem; }
+@keyframes hintSpin{ to{ transform:rotate(360deg); } }
+
+.fb-eyebrow{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.64rem;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:.3rem;
+}
+.fb-name{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.05rem;
+  color:var(--ink);
+  margin-bottom:.1rem;
+}
+.fb-roll{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.7rem;
+  letter-spacing:.06em;
+  color:var(--muted);
+  margin-bottom:.7rem;
+}
+.fb-email{
+  font-size:.78rem;
+  color:var(--ink-2);
+  display:flex;
+  align-items:center;
+  gap:.4rem;
+  margin-bottom:.85rem;
+  word-break:break-word;
+}
+.fb-email i{ color:var(--muted); }
+
+.avatar-ring{
+  width:74px; height:74px;
+  border-radius:50%;
+  padding:3px;
+  background:conic-gradient(var(--bc), var(--gold), var(--bc));
+  margin:0 auto .8rem;
+  animation:spinRing 5s linear infinite;
+}
+.avatar-ring img{
+  width:100%; height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  border:3px solid #fff;
+  display:block;
+  animation:spinRing 5s linear infinite reverse;
+}
+@keyframes spinRing{
+  to{ transform:rotate(360deg); }
+}
+
+.stu-name{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:1.12rem;
+  text-align:center;
+  margin-bottom:.15rem;
+  color:var(--ink);
+}
+.stu-roll{
+  font-family:'JetBrains Mono', monospace;
+  font-size:.72rem;
+  letter-spacing:.08em;
+  text-align:center;
+  color:var(--muted);
+  margin-bottom:1rem;
+}
+
+.card-divider{
+  border-top:1px dashed var(--line);
+  margin:0 0 1rem;
+}
+
+.meta-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:.83rem;
+  margin-bottom:.55rem;
+}
+.meta-row .k{
+  color:var(--muted);
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:500;
+}
+.meta-row .v{
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:600;
+  color:var(--ink-2);
+}
+
+.stamp{
+  position:absolute;
+  bottom:1.1rem; right:1.1rem;
+  width:64px; height:64px;
+  border-radius:50%;
+  border:2px dashed;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  transform:rotate(-11deg);
+  font-family:'JetBrains Mono', monospace;
+  line-height:1;
+  background:rgba(255,255,255,.6);
+}
+.stamp .num{font-size:1rem; font-weight:700;}
+.stamp .lbl{font-size:.5rem; letter-spacing:.1em; margin-top:2px;}
+
+.grade-high{color:var(--grade-high); border-color:var(--grade-high); animation:stampPulse 2.4s ease-in-out infinite;}
+.grade-mid{color:var(--grade-mid); border-color:var(--grade-mid);}
+.grade-low{color:var(--grade-low); border-color:var(--grade-low);}
+
+@keyframes stampPulse{
+  0%,100%{ transform:rotate(-11deg) scale(1); }
+  50%{ transform:rotate(-11deg) scale(1.08); }
+}
+
+.btn-view{
+  width:100%;
+  background:var(--bc, var(--ink));
+  color:#fff;
+  border:none;
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:600;
+  font-size:.85rem;
+  border-radius:9px;
+  padding:.55rem 0;
+  transition:filter .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.btn-view:hover{filter:brightness(1.12); box-shadow:0 6px 14px -2px color-mix(in srgb, var(--bc) 55%, transparent);}
+.btn-view:active{transform:scale(.97);}
+
+/* empty state */
+.empty-state{
+  display:none;
+  text-align:center;
+  padding:4.5rem 1rem;
+}
+.empty-state.show{display:block;}
+.empty-state i{font-size:2.2rem; color:var(--steel); margin-bottom:1rem;}
+.empty-state h4{font-family:'Fraunces', serif; margin-bottom:.4rem;}
+.empty-state p{color:var(--muted); font-size:.92rem;}
+
+/* modal */
+.modal-content{border-radius:16px; border:none;}
+.modal-header{border-bottom:1px solid var(--line);}
+.modal-title{font-family:'Fraunces', serif; font-weight:600;}
+
+/* stagger via nth-child, JS also sets inline delay for filtered items */
+.id-card{animation-delay:calc(var(--i, 0) * 60ms);}
+
+@media (prefers-reduced-motion: reduce){
+  .id-card{animation:none; opacity:1; transform:none;}
+  .id-card:hover{transform:none;}
+  .bg-blob, .registry-nav::after, .brand-mark .dot,
+  .avatar-ring, .avatar-ring img, .grade-high, .branch-chip.active{
+    animation:none !important;
+  }
+  .flip-inner{ transition:none; }
+  .id-card:hover .flip-inner, .id-card.flipped .flip-inner{ transform:none; }
+  .flip-back{ display:none; }
+}
+</style>
+</head>
+<body>
+<div class="bg-blob b1"></div>
+<div class="bg-blob b2"></div>
+<div class="bg-blob b3"></div>
+
+<!-- NAVBAR -->
+<nav class="registry-nav">
+  <div class="container">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center flex-wrap">
+        <div class="brand-mark"><span class="dot"></span>Student Registry</div>
+        <span class="brand-sub d-none d-lg-inline">Academic Directory</span>
+      </div>
+      <div class="search-wrap flex-grow-1">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input id="searchInput" type="text" class="form-control" placeholder="Search by name or roll number…">
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <div class="container">
+    <div class="row g-4 align-items-end">
+      <div class="col-lg-8">
+        <span class="filter-label">Filter by branch</span>
+        <div class="d-flex gap-2 flex-wrap" id="branchChips">
+          <button class="branch-chip active" data-branch="all"><span class="chip-dot"></span>All Branches</button>
+          <button class="branch-chip" data-branch="CSE"><span class="chip-dot"></span>CSE</button>
+          <button class="branch-chip" data-branch="ECE"><span class="chip-dot"></span>ECE</button>
+          <button class="branch-chip" data-branch="ME"><span class="chip-dot"></span>ME</button>
+          <button class="branch-chip" data-branch="CE"><span class="chip-dot"></span>CE</button>
+          <button class="branch-chip" data-branch="IT"><span class="chip-dot"></span>IT</button>
+          <button class="branch-chip" data-branch="EEE"><span class="chip-dot"></span>EEE</button>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <span class="filter-label">Minimum CGPA — <span class="cgpa-readout" id="cgpaReadout">6.0</span></span>
+        <input type="range" class="form-range cgpa-range" id="cgpaRange" min="6" max="10" step="0.1" value="6">
+      </div>
+    </div>
+    <div class="mt-3 result-meta" id="resultMeta"></div>
+  </div>
+</div>
+
+<!-- CARDS -->
+<div class="container card-grid">
+  <div class="row g-4" id="cardContainer"></div>
+  <div class="empty-state" id="emptyState">
+    <i class="bi bi-folder-x"></i>
+    <h4>No matching records</h4>
+    <p>Try a different name, roll number, branch, or lower the CGPA threshold.</p>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal fade" id="studentModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalName">Student Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const branchColors = {
+  CSE:"#7C3AED", ECE:"#0D9488", ME:"#E11D48",
+  CE:"#2563EB", IT:"#DB2777", EEE:"#D97706"
+};
+
+const students = [
+  {name:'Riya Rastogi', roll:'CE21001', branch:'CE', cgpa:9.5, sem:7, email:'riya.rastogi@vitcamp.edu'},
+  {name:'Aditya Saxena', roll:'CE21002', branch:'CE', cgpa:6.4, sem:4, email:'aditya.saxena@vitcamp.edu'},
+  {name:'Bhavna Iyer', roll:'CE21003', branch:'CE', cgpa:7.5, sem:7, email:'bhavna.iyer@vitcamp.edu'},
+  {name:'Yash Pillai', roll:'CE21004', branch:'CE', cgpa:6.6, sem:4, email:'yash.pillai@vitcamp.edu'},
+  {name:'Simran Das', roll:'CE21005', branch:'CE', cgpa:9.5, sem:7, email:'simran.das@vitcamp.edu'},
+  {name:'Om Khanna', roll:'CE21006', branch:'CE', cgpa:7.8, sem:4, email:'om.khanna@vitcamp.edu'},
+  {name:'Dev Nair', roll:'CE21007', branch:'CE', cgpa:8.8, sem:4, email:'dev.nair@vitcamp.edu'},
+  {name:'Shaurya Sen', roll:'CE21008', branch:'CE', cgpa:7.1, sem:7, email:'shaurya.sen@vitcamp.edu'},
+  {name:'Reyansh Dubey', roll:'CE21009', branch:'CE', cgpa:8.0, sem:5, email:'reyansh.dubey@vitcamp.edu'},
+  {name:'Om Bakshi', roll:'CE21010', branch:'CE', cgpa:9.8, sem:5, email:'om.bakshi@vitcamp.edu'},
+  {name:'Isha Bhat', roll:'CE21011', branch:'CE', cgpa:9.1, sem:5, email:'isha.bhat@vitcamp.edu'},
+  {name:'Harsh Saxena', roll:'CE21012', branch:'CE', cgpa:8.7, sem:6, email:'harsh.saxena@vitcamp.edu'},
+  {name:'Ira Mishra', roll:'CE21013', branch:'CE', cgpa:8.6, sem:7, email:'ira.mishra@vitcamp.edu'},
+  {name:'Gauri Kapoor', roll:'CE21014', branch:'CE', cgpa:8.6, sem:6, email:'gauri.kapoor@vitcamp.edu'},
+  {name:'Krishna Jain', roll:'CE21015', branch:'CE', cgpa:7.3, sem:7, email:'krishna.jain@vitcamp.edu'},
+  {name:'Om Desai', roll:'CE21016', branch:'CE', cgpa:9.3, sem:7, email:'om.desai@vitcamp.edu'},
+  {name:'Kavya Menon', roll:'CE21017', branch:'CE', cgpa:7.9, sem:7, email:'kavya.menon@vitcamp.edu'},
+  {name:'Vedant Malhotra', roll:'CE21018', branch:'CE', cgpa:7.3, sem:7, email:'vedant.malhotra@vitcamp.edu'},
+  {name:'Preeti Dutta', roll:'CE21019', branch:'CE', cgpa:9.7, sem:5, email:'preeti.dutta@vitcamp.edu'},
+  {name:'Dhruv Rao', roll:'CE21020', branch:'CE', cgpa:9.7, sem:7, email:'dhruv.rao@vitcamp.edu'},
+  {name:'Kirti Khanna', roll:'CSE21001', branch:'CSE', cgpa:6.1, sem:5, email:'kirti.khanna@vitcamp.edu'},
+  {name:'Gauri Yadav', roll:'CSE21002', branch:'CSE', cgpa:9.8, sem:7, email:'gauri.yadav@vitcamp.edu'},
+  {name:'Simran Menon', roll:'CSE21003', branch:'CSE', cgpa:6.8, sem:6, email:'simran.menon@vitcamp.edu'},
+  {name:'Dhruv Verma', roll:'CSE21004', branch:'CSE', cgpa:9.6, sem:6, email:'dhruv.verma@vitcamp.edu'},
+  {name:'Rohan Rastogi', roll:'CSE21005', branch:'CSE', cgpa:9.8, sem:5, email:'rohan.rastogi@vitcamp.edu'},
+  {name:'Naina Kumar', roll:'CSE21006', branch:'CSE', cgpa:6.4, sem:7, email:'naina.kumar@vitcamp.edu'},
+  {name:'Amara Bakshi', roll:'CSE21007', branch:'CSE', cgpa:6.2, sem:4, email:'amara.bakshi@vitcamp.edu'},
+  {name:'Riya Ghosh', roll:'CSE21008', branch:'CSE', cgpa:6.6, sem:4, email:'riya.ghosh@vitcamp.edu'},
+  {name:'Deepika Yadav', roll:'CSE21009', branch:'CSE', cgpa:8.9, sem:4, email:'deepika.yadav@vitcamp.edu'},
+  {name:'Ayaan Saxena', roll:'CSE21010', branch:'CSE', cgpa:9.3, sem:4, email:'ayaan.saxena@vitcamp.edu'},
+  {name:'Shreya Ghosh', roll:'CSE21011', branch:'CSE', cgpa:9.7, sem:5, email:'shreya.ghosh@vitcamp.edu'},
+  {name:'Deepika Goel', roll:'CSE21012', branch:'CSE', cgpa:8.4, sem:7, email:'deepika.goel@vitcamp.edu'},
+  {name:'Aditi Gupta', roll:'CSE21013', branch:'CSE', cgpa:8.9, sem:5, email:'aditi.gupta@vitcamp.edu'},
+  {name:'Sneha Sharma', roll:'CSE21014', branch:'CSE', cgpa:6.3, sem:5, email:'sneha.sharma@vitcamp.edu'},
+  {name:'Vanya Kapoor', roll:'CSE21015', branch:'CSE', cgpa:7.2, sem:4, email:'vanya.kapoor@vitcamp.edu'},
+  {name:'Parth Khanna', roll:'CSE21016', branch:'CSE', cgpa:9.7, sem:6, email:'parth.khanna@vitcamp.edu'},
+  {name:'Aditya Yadav', roll:'CSE21017', branch:'CSE', cgpa:9.9, sem:6, email:'aditya.yadav@vitcamp.edu'},
+  {name:'Priya Desai', roll:'CSE21018', branch:'CSE', cgpa:8.3, sem:6, email:'priya.desai@vitcamp.edu'},
+  {name:'Naveen Jain', roll:'ECE21001', branch:'ECE', cgpa:7.8, sem:6, email:'naveen.jain@vitcamp.edu'},
+  {name:'Myra Reddy', roll:'ECE21002', branch:'ECE', cgpa:9.4, sem:7, email:'myra.reddy@vitcamp.edu'},
+  {name:'Advait Chatterjee', roll:'ECE21003', branch:'ECE', cgpa:8.6, sem:4, email:'advait.chatterjee@vitcamp.edu'},
+  {name:'Vedant Nair', roll:'ECE21004', branch:'ECE', cgpa:9.2, sem:6, email:'vedant.nair@vitcamp.edu'},
+  {name:'Manav Sen', roll:'ECE21005', branch:'ECE', cgpa:7.0, sem:6, email:'manav.sen@vitcamp.edu'},
+  {name:'Aditi Saxena', roll:'ECE21006', branch:'ECE', cgpa:8.0, sem:4, email:'aditi.saxena@vitcamp.edu'},
+  {name:'Shreya Nair', roll:'ECE21007', branch:'ECE', cgpa:9.4, sem:4, email:'shreya.nair@vitcamp.edu'},
+  {name:'Karan Bose', roll:'ECE21008', branch:'ECE', cgpa:6.2, sem:4, email:'karan.bose@vitcamp.edu'},
+  {name:'Kirti Bakshi', roll:'ECE21009', branch:'ECE', cgpa:8.3, sem:4, email:'kirti.bakshi@vitcamp.edu'},
+  {name:'Ishaan Nair', roll:'ECE21010', branch:'ECE', cgpa:6.3, sem:4, email:'ishaan.nair@vitcamp.edu'},
+  {name:'Pooja Kumar', roll:'ECE21011', branch:'ECE', cgpa:8.1, sem:5, email:'pooja.kumar@vitcamp.edu'},
+  {name:'Kabir Bose', roll:'ECE21012', branch:'ECE', cgpa:7.6, sem:7, email:'kabir.bose@vitcamp.edu'},
+  {name:'Diya Agarwal', roll:'ECE21013', branch:'ECE', cgpa:7.0, sem:5, email:'diya.agarwal@vitcamp.edu'},
+  {name:'Ishaan Yadav', roll:'ECE21014', branch:'ECE', cgpa:8.0, sem:5, email:'ishaan.yadav@vitcamp.edu'},
+  {name:'Harsh Iyer', roll:'ECE21015', branch:'ECE', cgpa:7.4, sem:5, email:'harsh.iyer@vitcamp.edu'},
+  {name:'Rahul Sen', roll:'ECE21016', branch:'ECE', cgpa:8.9, sem:7, email:'rahul.sen@vitcamp.edu'},
+  {name:'Shreya Singh', roll:'ECE21017', branch:'ECE', cgpa:9.4, sem:4, email:'shreya.singh@vitcamp.edu'},
+  {name:'Rudra Chopra', roll:'ECE21018', branch:'ECE', cgpa:9.2, sem:7, email:'rudra.chopra@vitcamp.edu'},
+  {name:'Harsh Desai', roll:'ECE21019', branch:'ECE', cgpa:6.9, sem:5, email:'harsh.desai@vitcamp.edu'},
+  {name:'Myra Bakshi', roll:'ECE21020', branch:'ECE', cgpa:6.7, sem:7, email:'myra.bakshi@vitcamp.edu'},
+  {name:'Saanvi Pillai', roll:'ECE21021', branch:'ECE', cgpa:7.7, sem:6, email:'saanvi.pillai@vitcamp.edu'},
+  {name:'Aarohi Chopra', roll:'ECE21022', branch:'ECE', cgpa:6.6, sem:4, email:'aarohi.chopra@vitcamp.edu'},
+  {name:'Ansh Ghosh', roll:'ECE21023', branch:'ECE', cgpa:6.6, sem:4, email:'ansh.ghosh@vitcamp.edu'},
+  {name:'Aryan Khanna', roll:'ECE21024', branch:'ECE', cgpa:6.7, sem:7, email:'aryan.khanna@vitcamp.edu'},
+  {name:'Reyansh Bakshi', roll:'ECE21025', branch:'ECE', cgpa:9.6, sem:4, email:'reyansh.bakshi@vitcamp.edu'},
+  {name:'Lakshmi Mishra', roll:'ECE21026', branch:'ECE', cgpa:8.9, sem:7, email:'lakshmi.mishra@vitcamp.edu'},
+  {name:'Esha Sen', roll:'ECE21027', branch:'ECE', cgpa:9.3, sem:6, email:'esha.sen@vitcamp.edu'},
+  {name:'Ishaan Pillai', roll:'ECE21028', branch:'ECE', cgpa:7.1, sem:6, email:'ishaan.pillai@vitcamp.edu'},
+  {name:'Naveen Reddy', roll:'ECE21029', branch:'ECE', cgpa:6.6, sem:7, email:'naveen.reddy@vitcamp.edu'},
+  {name:'Radhika Nair', roll:'ECE21030', branch:'ECE', cgpa:9.2, sem:7, email:'radhika.nair@vitcamp.edu'},
+  {name:'Aditya Nayar', roll:'ECE21031', branch:'ECE', cgpa:6.2, sem:7, email:'aditya.nayar@vitcamp.edu'},
+  {name:'Aditya Kaur', roll:'ECE21032', branch:'ECE', cgpa:6.9, sem:7, email:'aditya.kaur@vitcamp.edu'},
+  {name:'Yash Chauhan', roll:'ECE21033', branch:'ECE', cgpa:7.8, sem:6, email:'yash.chauhan@vitcamp.edu'},
+  {name:'Yash Verma', roll:'EEE21001', branch:'EEE', cgpa:7.1, sem:5, email:'yash.verma@vitcamp.edu'},
+  {name:'Aditya Rao', roll:'EEE21002', branch:'EEE', cgpa:8.9, sem:4, email:'aditya.rao@vitcamp.edu'},
+  {name:'Aarav Singh', roll:'EEE21003', branch:'EEE', cgpa:7.6, sem:6, email:'aarav.singh@vitcamp.edu'},
+  {name:'Preeti Kumar', roll:'EEE21004', branch:'EEE', cgpa:6.3, sem:5, email:'preeti.kumar@vitcamp.edu'},
+  {name:'Ira Nayar', roll:'EEE21005', branch:'EEE', cgpa:9.3, sem:5, email:'ira.nayar@vitcamp.edu'},
+  {name:'Yash Joshi', roll:'EEE21006', branch:'EEE', cgpa:6.6, sem:7, email:'yash.joshi@vitcamp.edu'},
+  {name:'Riya Yadav', roll:'EEE21007', branch:'EEE', cgpa:8.7, sem:6, email:'riya.yadav@vitcamp.edu'},
+  {name:'Amara Yadav', roll:'EEE21008', branch:'EEE', cgpa:7.2, sem:4, email:'amara.yadav@vitcamp.edu'},
+  {name:'Lakshmi Desai', roll:'EEE21009', branch:'EEE', cgpa:6.4, sem:5, email:'lakshmi.desai@vitcamp.edu'},
+  {name:'Om Malhotra', roll:'EEE21010', branch:'EEE', cgpa:7.0, sem:4, email:'om.malhotra@vitcamp.edu'},
+  {name:'Tanvi Singh', roll:'EEE21011', branch:'EEE', cgpa:6.4, sem:4, email:'tanvi.singh@vitcamp.edu'},
+  {name:'Nisha Mehta', roll:'EEE21012', branch:'EEE', cgpa:7.7, sem:5, email:'nisha.mehta@vitcamp.edu'},
+  {name:'Ritika Agarwal', roll:'EEE21013', branch:'EEE', cgpa:9.3, sem:6, email:'ritika.agarwal@vitcamp.edu'},
+  {name:'Yuvraj Desai', roll:'EEE21014', branch:'EEE', cgpa:7.6, sem:7, email:'yuvraj.desai@vitcamp.edu'},
+  {name:'Gauri Jain', roll:'EEE21015', branch:'EEE', cgpa:8.2, sem:7, email:'gauri.jain@vitcamp.edu'},
+  {name:'Amara Kaur', roll:'EEE21016', branch:'EEE', cgpa:9.5, sem:7, email:'amara.kaur@vitcamp.edu'},
+  {name:'Vikram Rastogi', roll:'EEE21017', branch:'EEE', cgpa:6.9, sem:7, email:'vikram.rastogi@vitcamp.edu'},
+  {name:'Siddharth Ghosh', roll:'EEE21018', branch:'EEE', cgpa:6.6, sem:7, email:'siddharth.ghosh@vitcamp.edu'},
+  {name:'Kirti Chauhan', roll:'EEE21019', branch:'EEE', cgpa:6.1, sem:7, email:'kirti.chauhan@vitcamp.edu'},
+  {name:'Kavya Iyer', roll:'EEE21020', branch:'EEE', cgpa:6.2, sem:4, email:'kavya.iyer@vitcamp.edu'},
+  {name:'Ishaan Dubey', roll:'EEE21021', branch:'EEE', cgpa:9.2, sem:5, email:'ishaan.dubey@vitcamp.edu'},
+  {name:'Aryan Desai', roll:'EEE21022', branch:'EEE', cgpa:8.3, sem:4, email:'aryan.desai@vitcamp.edu'},
+  {name:'Krishna Saxena', roll:'EEE21023', branch:'EEE', cgpa:7.3, sem:7, email:'krishna.saxena@vitcamp.edu'},
+  {name:'Anika Saxena', roll:'IT21001', branch:'IT', cgpa:6.1, sem:5, email:'anika.saxena@vitcamp.edu'},
+  {name:'Rashi Singh', roll:'IT21002', branch:'IT', cgpa:8.8, sem:5, email:'rashi.singh@vitcamp.edu'},
+  {name:'Deepika Khanna', roll:'IT21003', branch:'IT', cgpa:7.6, sem:5, email:'deepika.khanna@vitcamp.edu'},
+  {name:'Suresh Sen', roll:'IT21004', branch:'IT', cgpa:9.4, sem:4, email:'suresh.sen@vitcamp.edu'},
+  {name:'Saanvi Saxena', roll:'IT21005', branch:'IT', cgpa:6.8, sem:6, email:'saanvi.saxena@vitcamp.edu'},
+  {name:'Priya Yadav', roll:'IT21006', branch:'IT', cgpa:9.6, sem:6, email:'priya.yadav@vitcamp.edu'},
+  {name:'Rahul Pandey', roll:'IT21007', branch:'IT', cgpa:6.6, sem:7, email:'rahul.pandey@vitcamp.edu'},
+  {name:'Ritvik Iyer', roll:'IT21008', branch:'IT', cgpa:6.9, sem:7, email:'ritvik.iyer@vitcamp.edu'},
+  {name:'Rahul Chauhan', roll:'IT21009', branch:'IT', cgpa:7.8, sem:7, email:'rahul.chauhan@vitcamp.edu'},
+  {name:'Deepika Chauhan', roll:'IT21010', branch:'IT', cgpa:7.2, sem:6, email:'deepika.chauhan@vitcamp.edu'},
+  {name:'Vivaan Nayar', roll:'IT21011', branch:'IT', cgpa:9.9, sem:4, email:'vivaan.nayar@vitcamp.edu'},
+  {name:'Tanvi Pillai', roll:'IT21012', branch:'IT', cgpa:6.8, sem:6, email:'tanvi.pillai@vitcamp.edu'},
+  {name:'Diya Sen', roll:'IT21013', branch:'IT', cgpa:7.9, sem:4, email:'diya.sen@vitcamp.edu'},
+  {name:'Arjun Rao', roll:'IT21014', branch:'IT', cgpa:7.7, sem:6, email:'arjun.rao@vitcamp.edu'},
+  {name:'Vanya Goel', roll:'IT21015', branch:'IT', cgpa:6.5, sem:5, email:'vanya.goel@vitcamp.edu'},
+  {name:'Isha Kaur', roll:'IT21016', branch:'IT', cgpa:7.2, sem:4, email:'isha.kaur@vitcamp.edu'},
+  {name:'Pooja Pandey', roll:'IT21017', branch:'IT', cgpa:9.3, sem:4, email:'pooja.pandey@vitcamp.edu'},
+  {name:'Deepika Verma', roll:'IT21018', branch:'IT', cgpa:7.5, sem:4, email:'deepika.verma@vitcamp.edu'},
+  {name:'Ramesh Yadav', roll:'IT21019', branch:'IT', cgpa:9.5, sem:7, email:'ramesh.yadav@vitcamp.edu'},
+  {name:'Rahul Kaur', roll:'IT21020', branch:'IT', cgpa:6.1, sem:7, email:'rahul.kaur@vitcamp.edu'},
+  {name:'Advait Singh', roll:'IT21021', branch:'IT', cgpa:8.4, sem:4, email:'advait.singh@vitcamp.edu'},
+  {name:'Nikhil Malhotra', roll:'ME21001', branch:'ME', cgpa:6.4, sem:7, email:'nikhil.malhotra@vitcamp.edu'},
+  {name:'Dev Chatterjee', roll:'ME21002', branch:'ME', cgpa:8.4, sem:4, email:'dev.chatterjee@vitcamp.edu'},
+  {name:'Rohan Bakshi', roll:'ME21003', branch:'ME', cgpa:9.2, sem:6, email:'rohan.bakshi@vitcamp.edu'},
+  {name:'Ira Dutta', roll:'ME21004', branch:'ME', cgpa:9.9, sem:5, email:'ira.dutta@vitcamp.edu'},
+  {name:'Yash Yadav', roll:'ME21005', branch:'ME', cgpa:9.0, sem:6, email:'yash.yadav@vitcamp.edu'},
+  {name:'Trisha Patel', roll:'ME21006', branch:'ME', cgpa:7.8, sem:4, email:'trisha.patel@vitcamp.edu'},
+  {name:'Nikhil Kumar', roll:'ME21007', branch:'ME', cgpa:6.8, sem:4, email:'nikhil.kumar@vitcamp.edu'},
+  {name:'Saanvi Nayar', roll:'ME21008', branch:'ME', cgpa:9.6, sem:4, email:'saanvi.nayar@vitcamp.edu'},
+  {name:'Kabir Khanna', roll:'ME21009', branch:'ME', cgpa:6.2, sem:6, email:'kabir.khanna@vitcamp.edu'},
+  {name:'Naveen Mehta', roll:'ME21010', branch:'ME', cgpa:8.3, sem:5, email:'naveen.mehta@vitcamp.edu'},
+  {name:'Simran Bhat', roll:'ME21011', branch:'ME', cgpa:9.4, sem:6, email:'simran.bhat@vitcamp.edu'},
+  {name:'Vihaan Gupta', roll:'ME21012', branch:'ME', cgpa:6.7, sem:6, email:'vihaan.gupta@vitcamp.edu'},
+  {name:'Ananya Reddy', roll:'ME21013', branch:'ME', cgpa:8.0, sem:6, email:'ananya.reddy@vitcamp.edu'},
+  {name:'Ira Jain', roll:'ME21014', branch:'ME', cgpa:9.3, sem:7, email:'ira.jain@vitcamp.edu'},
+  {name:'Swati Mehta', roll:'ME21015', branch:'ME', cgpa:8.1, sem:6, email:'swati.mehta@vitcamp.edu'},
+  {name:'Vijay Kumar Sain', roll:'ME21016', branch:'ME', cgpa:9.7, sem:7, email:'vijay.kumar.sain@vitcamp.edu'},
+  {name:'Vishal Kumhar', roll:'EEE21024', branch:'EEE', cgpa:6.2, sem:4, email:'vishal.kumhar@vitcamp.edu'},
+  {name:'Vikash', roll:'ME21017', branch:'ME', cgpa:8.3, sem:5, email:'vikash@vitcamp.edu'},
+  {name:'Yuvraj Jeengar', roll:'CSE21019', branch:'CSE', cgpa:6.3, sem:7, email:'yuvraj.jeengar@vitcamp.edu'},
+  {name:'Vinayak', roll:'CSE21020', branch:'CSE', cgpa:6.9, sem:7, email:'vinayak@vitcamp.edu'},
+  {name:'Vikash Jatt', roll:'CSE21021', branch:'CSE', cgpa:9.2, sem:4, email:'vikash.jatt@vitcamp.edu'},
+  {name:'Umesh Prajapat', roll:'ECE21034', branch:'ECE', cgpa:8.5, sem:4, email:'umesh.prajapat@vitcamp.edu'},
+  {name:'Mohan', roll:'IT21022', branch:'IT', cgpa:8.3, sem:4, email:'mohan@vitcamp.edu'},
+  {name:'Suresh Choudhary', roll:'ECE21035', branch:'ECE', cgpa:6.2, sem:5, email:'suresh.choudhary@vitcamp.edu'},
+  {name:'Ramavtar Meena', roll:'ME21018', branch:'ME', cgpa:7.6, sem:4, email:'ramavtar.meena@vitcamp.edu'},
+  {name:'Mahaveer Suthar', roll:'IT21023', branch:'IT', cgpa:7.2, sem:5, email:'mahaveer.suthar@vitcamp.edu'},
+  {name:'Ghanshyam Gurjar', roll:'CSE21022', branch:'CSE', cgpa:8.3, sem:5, email:'ghanshyam.gurjar@vitcamp.edu'},
+];
+
+let state = { query:"", branch:"all", minCgpa:6.0 };
+
+function gradeClass(cgpa){
+  if(cgpa >= 8.5) return "grade-high";
+  if(cgpa >= 7.0) return "grade-mid";
+  return "grade-low";
+}
+
+function initials(name){
+  return name.split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+}
+
+function avatarUrl(name){
+  const bg = "1D2C4F";
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${bg}&color=fff&font-size=0.38&bold=true`;
+}
+
+function render(){
+  const container = document.getElementById("cardContainer");
+  const empty = document.getElementById("emptyState");
+  const meta = document.getElementById("resultMeta");
+
+  const q = state.query.trim().toLowerCase();
+  const filtered = students.filter(s=>{
+    const matchesQuery = !q || s.name.toLowerCase().includes(q) || s.roll.toLowerCase().includes(q);
+    const matchesBranch = state.branch === "all" || s.branch === state.branch;
+    const matchesCgpa = s.cgpa >= state.minCgpa;
+    return matchesQuery && matchesBranch && matchesCgpa;
+  });
+
+  container.innerHTML = "";
+
+  filtered.forEach((s, i)=>{
+    const col = document.createElement("div");
+    col.className = "col-sm-6 col-lg-4 col-xl-3";
+    const gc = gradeClass(s.cgpa);
+    const color = branchColors[s.branch];
+    col.innerHTML = `
+      <div class="id-card" style="--i:${Math.min(i, 14)}; --bc:${color};">
+        <div class="top-accent"></div>
+        <span class="branch-tab">${s.branch}</span>
+        <div class="flip-scene">
+          <div class="flip-inner">
+
+            <div class="flip-front">
+              <div class="avatar-ring">
+                <img src="${avatarUrl(s.name)}" alt="${s.name}">
+              </div>
+              <div class="stu-name">${s.name}</div>
+              <div class="stu-roll">${s.roll}</div>
+              <div class="card-divider"></div>
+              <div class="meta-row"><span class="k">Branch</span><span class="v" style="color:${color}">${s.branch}</span></div>
+              <div class="meta-row"><span class="k">Semester</span><span class="v">${s.sem}</span></div>
+              <div class="flip-hint"><i class="bi bi-arrow-repeat"></i> hover to flip</div>
+              <div class="stamp ${gc}">
+                <span class="num">${s.cgpa.toFixed(1)}</span>
+                <span class="lbl">CGPA</span>
+              </div>
+            </div>
+
+            <div class="flip-back">
+              <div class="fb-eyebrow" style="color:${color}">Full Profile</div>
+              <div class="fb-name">${s.name}</div>
+              <div class="fb-roll">${s.roll}</div>
+              <div class="card-divider"></div>
+              <div class="fb-email"><i class="bi bi-envelope"></i> ${s.email}</div>
+              <div class="meta-row"><span class="k">Branch</span><span class="v" style="color:${color}">${s.branch}</span></div>
+              <div class="meta-row"><span class="k">Semester</span><span class="v">${s.sem}</span></div>
+              <div class="meta-row"><span class="k">CGPA</span><span class="v ${gc}">${s.cgpa.toFixed(1)}</span></div>
+              <button class="btn-view mt-2" data-roll="${s.roll}">View Full Details</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(col);
+  });
+
+  empty.classList.toggle("show", filtered.length === 0);
+  meta.innerHTML = `Showing <b>${filtered.length}</b> of <b>${students.length}</b> student records`;
+
+  container.querySelectorAll(".btn-view").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openModal(btn.dataset.roll);
+    });
+  });
+
+  // touch devices: tap the card to flip it (hover isn't available)
+  if(window.matchMedia("(hover: none)").matches){
+    container.querySelectorAll(".id-card").forEach(card=>{
+      card.addEventListener("click", (e)=>{
+        if(e.target.closest(".btn-view")) return;
+        card.classList.toggle("flipped");
+      });
+    });
+  }
+}
+
+function openModal(roll){
+  const s = students.find(st=>st.roll === roll);
+  document.getElementById("modalName").textContent = s.name;
+  const gc = gradeClass(s.cgpa);
+  document.getElementById("modalBody").innerHTML = `
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <img src="${avatarUrl(s.name)}" alt="${s.name}" style="width:64px;height:64px;border-radius:50%;">
+      <div>
+        <div class="fw-semibold">${s.roll}</div>
+        <div class="text-muted small">${s.email}</div>
+      </div>
+    </div>
+    <div class="meta-row"><span class="k">Branch</span><span class="v">${s.branch}</span></div>
+    <div class="meta-row"><span class="k">Semester</span><span class="v">${s.sem}</span></div>
+    <div class="meta-row"><span class="k">CGPA</span><span class="v ${gc}">${s.cgpa.toFixed(1)}</span></div>
+  `;
+  new bootstrap.Modal(document.getElementById("studentModal")).show();
+}
+
+document.getElementById("searchInput").addEventListener("input", e=>{
+  state.query = e.target.value;
+  render();
+});
+
+document.getElementById("branchChips").addEventListener("click", e=>{
+  const chip = e.target.closest(".branch-chip");
+  if(!chip) return;
+  document.querySelectorAll(".branch-chip").forEach(c=>c.classList.remove("active"));
+  chip.classList.add("active");
+  state.branch = chip.dataset.branch;
+  render();
+});
+
+document.getElementById("cgpaRange").addEventListener("input", e=>{
+  state.minCgpa = parseFloat(e.target.value);
+  document.getElementById("cgpaReadout").textContent = state.minCgpa.toFixed(1);
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
