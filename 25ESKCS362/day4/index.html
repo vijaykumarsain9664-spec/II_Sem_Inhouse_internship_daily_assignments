@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Counter App</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    background:#f5f5f5;
+    color:#222;
+    transition:.3s;
+}
+
+/* Dark Theme */
+body.dark{
+    background:#222;
+    color:#fff;
+}
+
+/* Navbar */
+nav{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 30px;
+    background:#4CAF50;
+    color:white;
+}
+
+nav h2{
+    font-size:24px;
+}
+
+.nav-right{
+    display:flex;
+    gap:10px;
+}
+
+button{
+    padding:10px 18px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:16px;
+    transition:.3s;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+/* Counter Section */
+.container{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    height:80vh;
+}
+
+.counter{
+    font-size:70px;
+    margin:20px;
+    font-weight:bold;
+}
+
+.count-btn{
+    background:#2196F3;
+    color:white;
+}
+
+.reset-btn{
+    background:#f44336;
+    color:white;
+}
+
+.theme-btn{
+    background:#333;
+    color:white;
+}
+
+body.dark .theme-btn{
+    background:#FFC107;
+    color:black;
+}
+
+.buttons{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+}
+</style>
+
+</head>
+<body>
+
+<nav>
+    <h2>Counter App</h2>
+
+    <div class="nav-right">
+        <button class="theme-btn" onclick="toggleTheme()">🌙 Theme</button>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="counter" id="count">0</div>
+
+    <div class="buttons">
+        <button class="count-btn" onclick="increaseCount()">➕ Count</button>
+
+        <button class="reset-btn" onclick="resetCount()">🔄 Reset</button>
+    </div>
+
+</div>
+
+<script>
+let count = 0;
+
+function increaseCount(){
+    count++;
+    document.getElementById("count").innerText = count;
+}
+
+function resetCount(){
+    count = 0;
+    document.getElementById("count").innerText = count;
+}
+
+function toggleTheme(){
+    document.body.classList.toggle("dark");
+}
+</script>
+
+</body>
+</html>
